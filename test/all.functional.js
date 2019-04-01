@@ -1,47 +1,55 @@
 if (typeof module !== 'undefined') {
     var assert = require('assert');
     var sinon = require('sinon');
-    var Faker = require('../index');
+    var faker = require('../index');
 }
 
-// Basic smoke tests to make sure each method is at least implemented and returns a string.
+var functionalHelpers = require('./support/function-helpers.js');
 
-var modules = {
-    Address: [
-        'city', 'streetName', 'streetAddress', 'secondaryAddress',
-        'brState', 'ukCountry', 'ukCounty', 'usState', 'zipCode'
-    ],
-
-    Company: ['companyName', 'companySuffix', 'catchPhrase', 'bs'],
-
-    Internet: ['email', 'userName', 'domainName', 'domainWord', 'ip'],
-
-    Lorem: ['words', 'sentence', 'sentences', 'paragraph', 'paragraphs'],
-
-    Name: ['firstName', 'lastName', 'findName'],
-
-    PhoneNumber: ['phoneNumber']
-};
+var modules = functionalHelpers.modulesList();
 
 describe("functional tests", function () {
+  for(var locale in faker.locales) {
+    faker.locale = locale;
     Object.keys(modules).forEach(function (module) {
         describe(module, function () {
             modules[module].forEach(function (meth) {
                 it(meth + "()", function () {
-                    var result = Faker[module][meth]();
-                    assert.ok(result);
+                    var result = faker[module][meth]();
+                    if (meth === 'boolean') {
+                        assert.ok(result === true || result === false);
+                    } else {
+                        assert.ok(result);
+                    }
                 });
             });
         });
     });
+  }
+});
 
-    describe("Address", function () {
-        it("zipCodeFormat()", function () {
-            var result = Faker.Address.zipCodeFormat(0);
-            assert.ok(!result.match(/-/));
-
-            result = Faker.Address.zipCodeFormat(1);
-            assert.ok(result.match(/-/));
+describe("faker.fake functional tests", function () {
+  for(var locale in faker.locales) {
+    faker.locale = locale;
+    faker.seed(1);
+    Object.keys(modules).forEach(function (module) {
+        describe(module, function () {
+            modules[module].forEach(function (meth) {
+                it(meth + "()", function () {
+                    var result = faker.fake('{{' + module + '.' + meth + '}}');
+                    // just make sure any result is returned
+                    // an undefined result usually means an error
+                    assert.ok(typeof result !== 'undefined');
+                    /*
+                    if (meth === 'boolean') {
+                        assert.ok(result === true || result === false);
+                    } else {
+                        assert.ok(result);
+                    }
+                    */
+                });
+            });
         });
     });
+  }
 });
